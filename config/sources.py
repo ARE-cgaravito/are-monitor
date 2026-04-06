@@ -200,6 +200,21 @@ SOURCES = [
         },
     },
     {
+        "id": "tenderstream",
+        "name": "Tenderstream – Public Listings",
+        "url": "https://tenderstream.com/tenders",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .tender-item, .tender, li.item, tr",
+            "title_selector": "h2, h3, .tender-title, td.title, a",
+            "link_selector": "a",
+            "date_selector": ".date, .deadline, td.date, time",
+        },
+        "notes": "Public listings only — upgrade to paid for full access",
+    },
+    {
         "id": "chilecompra",
         "name": "ChileCompra",
         "url": "https://api.mercadopublico.cl",
@@ -501,6 +516,123 @@ SOURCES = [
             "title_selector": "td, h3, .title, a",
             "link_selector": "a",
             "date_selector": ".fecha, td.date, time",
+        },
+    },
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # LATIN AMERICA — COUNTRY PROCUREMENT PORTALS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    {
+        "id": "ecuador_sercop",
+        "name": "Ecuador – SERCOP (Compras Públicas)",
+        "url": "https://www.compraspublicas.gob.ec/ProcesoContratacion/compras/PC/buscarProceso.cpe",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "tr, .proceso, .item, li",
+            "title_selector": "td, .descripcion, h3, a",
+            "link_selector": "a",
+            "date_selector": ".fecha, td, time",
+        },
+    },
+    {
+        "id": "guyana_npta",
+        "name": "Guyana – National Procurement & Tender Administration",
+        "url": "https://www.guyanapo.gov.gy/index.php/tenders",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, tr, li, .tender",
+            "title_selector": "h2, h3, td, a, .title",
+            "link_selector": "a",
+            "date_selector": ".date, td, time",
+        },
+    },
+    {
+        "id": "dominican_republic_dgcp",
+        "name": "República Dominicana – DGCP",
+        "url": "https://www.dgcp.gob.do/index.php/oportunidades-de-negocios",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, tr, li, .proceso",
+            "title_selector": "h2, h3, td, a",
+            "link_selector": "a",
+            "date_selector": ".fecha, td, time",
+        },
+    },
+    {
+        "id": "mexico_compranet",
+        "name": "México – CompraNet",
+        "url": "https://compranet.hacienda.gob.mx/web/login.html",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "tr, .licitacion, li",
+            "title_selector": "td, h3, a",
+            "link_selector": "a",
+            "date_selector": ".fecha, td, time",
+        },
+    },
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # HOSPITALITY — INDUSTRY PIPELINE & PRESS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    {
+        "id": "hospitalitynet",
+        "name": "Hospitalitynet – Hotel Development News",
+        "url": "https://www.hospitalitynet.org/news/hotel_development.html",
+        "rss": "https://www.hospitalitynet.org/rss/4news.html",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "rss",
+    },
+    {
+        "id": "hotel_management_dev",
+        "name": "Hotel Management – Development",
+        "url": "https://www.hotelmanagement.net/development",
+        "rss": "https://www.hotelmanagement.net/rss.xml",
+        "category": "tender",
+        "subcategory": "international",
+        "fetch_method": "rss",
+    },
+    {
+        "id": "sleeper_news",
+        "name": "Sleeper Magazine – Hospitality Design",
+        "url": "https://sleeper.media/news",
+        "category": "architecture_competition",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .post, .news-item",
+            "title_selector": "h2, h3, .entry-title",
+            "link_selector": "a",
+            "date_selector": "time, .date",
+        },
+    },
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # COLOMBIA — HOSPITALITY & TOURISM SECTOR
+    # ═══════════════════════════════════════════════════════════════════════
+
+    {
+        "id": "fontur",
+        "name": "FONTUR Colombia – Fondo Nacional de Turismo",
+        "url": "https://fontur.com.co/contratacion",
+        "category": "tender",
+        "subcategory": "colombia",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, tr, li, .proceso",
+            "title_selector": "h2, h3, td, a",
+            "link_selector": "a",
+            "date_selector": ".fecha, td, time",
         },
     },
 ]
