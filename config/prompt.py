@@ -125,3 +125,8 @@ def build_user_message(opportunities: list) -> str:
                 lines.append(f"{key}: {value}")
         lines.append("")
     return "\n".join(lines)
+
+# NOTE FOR FILTER CALIBRATION:
+# Be generous with BORDERLINE decisions. When in doubt between EXCLUDE and BORDERLINE,
+# choose BORDERLINE. The firm prefers to see more options and decide themselves
+# rather than miss an opportunity. Only use EXCLUDE when clearly not a design commission.
