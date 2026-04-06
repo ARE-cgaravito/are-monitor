@@ -1,0 +1,54 @@
+name: ARE Opportunity Monitor
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+    - cron: '0 12 * * 4'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run opportunity monitor
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/main.py
+
+      - name: Publish digest to GitHub Pages
+        run: |
+          git config user.name  "ARE Monitor Bot"
+          git config user.email "monitor@are-co.com"
+          git add docs/index.html
+          git diff --staged --quiet || git commit -m "Update digest $(date +'%Y-%m-%d %H:%M')"
+          git push
+
+      - name: Upload run log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run-log-${{ github.run_id }}
+          path: logs/
+          retention-days: 30
