@@ -14,7 +14,7 @@ from config.prompt import SYSTEM_PROMPT, build_user_message
 
 logger = logging.getLogger(__name__)
 COLOMBIA_TZ = pytz.timezone("America/Bogota")
-BATCH_SIZE = 15  # opportunities per Claude call (stay well within context)
+BATCH_SIZE = 10  # opportunities per Claude call (stay well within context)
 
 
 def filter_opportunities(raw_opportunities: list) -> dict:
@@ -41,7 +41,7 @@ def filter_opportunities(raw_opportunities: list) -> dict:
             user_msg = build_user_message(batch)
             response = client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=4096,
+                max_tokens=8192,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_msg}],
             )
