@@ -104,6 +104,7 @@ OUTPUT FORMAT — return ONLY valid JSON, no preamble
     "decision": "INCLUDE|BORDERLINE|EXCLUDE",
     "strategic_fit": 1-5,
     "deadline": "YYYY-MM-DD or null",
+    "deadline": "YYYY-MM-DD extracted from any date mentioned in the text — closing date, submission date, fecha límite, fecha cierre, plazo, etc. If multiple dates, use the submission/closing deadline. null only if truly no date found anywhere.",
     "days_remaining": integer or null,
     "budget": "stated budget as string, or null",
     "organizer": "entity name or hotel brand/developer",
