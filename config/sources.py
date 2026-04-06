@@ -75,7 +75,7 @@ SOURCES = [
     {
         "id": "europaconcorsi",
         "name": "Europaconcorsi",
-        "url": "https://europaconcorsi.com/competitions",
+        "url": "https://europaconcorsi.com/en/competitions",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -87,9 +87,9 @@ SOURCES = [
         },
     },
     {
-        "id": "archmarathon",
-        "name": "ArchMarathon – Open Calls",
-        "url": "https://archmarathon.com/open-calls/",
+        "id": "archinect_competitions",
+        "name": "Archinect – Competitions",
+        "url": "https://archinect.com/competitions",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -103,7 +103,7 @@ SOURCES = [
     {
         "id": "riba_competitions",
         "name": "RIBA Competitions",
-        "url": "https://www.architecture.com/riba-competitions/competitions-and-awards/live-competitions",
+        "url": "https://www.architecture.com/riba-competitions/find-a-competition",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -160,7 +160,7 @@ SOURCES = [
     {
         "id": "idb_projects",
         "name": "IDB – Inter-American Development Bank",
-        "url": "https://www.iadb.org/en/projects/consulting-services",
+        "url": "https://www.iadb.org/en/about-us/procurement/procurement-notices",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -174,7 +174,7 @@ SOURCES = [
     {
         "id": "world_bank",
         "name": "World Bank – Consulting Opportunities",
-        "url": "https://projects.worldbank.org/en/projects-operations/procurement/noticeType=CS",
+        "url": "https://projects.worldbank.org/en/projects-operations/procurement",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -248,7 +248,7 @@ SOURCES = [
     {
         "id": "concursos_arquitectura",
         "name": "ConcursosArquitectura.com",
-        "url": "https://www.concursosarquitectura.com",
+        "url": "https://concursosdearquitectura.com",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -333,7 +333,7 @@ SOURCES = [
     {
         "id": "coaa",
         "name": "COAA – Zaragoza",
-        "url": "https://www.coaaragon.es/es/concursos",
+        "url": "https://www.coaaragon.es/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -347,7 +347,7 @@ SOURCES = [
     {
         "id": "coa_malaga",
         "name": "COA Málaga",
-        "url": "https://coamalaga.es/concursos/",
+        "url": "https://coamalaga.es/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -383,34 +383,15 @@ SOURCES = [
     # ═══════════════════════════════════════════════════════════════════════
 
     {
-        "id": "secop1",
-        "name": "SECOP I",
-        "url": "https://www.contratos.gov.co",
+        "id": "secop_integrado",
+        "name": "SECOP Integrado (I + II)",
+        "url": "https://www.datos.gov.co/resource/rpmr-utcd.json",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "api",
         "api_config": {
-            "type": "secop1",
-            "endpoint": "https://www.datos.gov.co/resource/jbjy-vk9h.json",
-            "keywords": [
-                "estudios y diseños",
-                "diseño arquitectónico",
-                "diseño urbano",
-                "diseño interior",
-                "arquitectura",
-            ],
-        },
-    },
-    {
-        "id": "secop2",
-        "name": "SECOP II",
-        "url": "https://www.colombiacompra.gov.co/secop-ii",
-        "category": "tender",
-        "subcategory": "colombia",
-        "fetch_method": "api",
-        "api_config": {
-            "type": "secop2",
-            "endpoint": "https://www.datos.gov.co/resource/p6dx-8zbt.json",
+            "type": "secop_integrado",
+            "endpoint": "https://www.datos.gov.co/resource/rpmr-utcd.json",
             "keywords": [
                 "estudios y diseños",
                 "diseño arquitectónico",
@@ -436,6 +417,7 @@ SOURCES = [
     },
     {
         "id": "eru_bogota",
+        "verify_ssl": False,
         "name": "ERU – Empresa de Renovación Urbana de Bogotá",
         "url": "https://eru.gov.co/es/contratacion",
         "category": "tender",
@@ -451,7 +433,7 @@ SOURCES = [
     {
         "id": "idu_bogota",
         "name": "IDU – Instituto de Desarrollo Urbano",
-        "url": "https://www.idu.gov.co/page/contratacion",
+        "url": "https://www.idu.gov.co/contratacion",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -465,7 +447,7 @@ SOURCES = [
     {
         "id": "mineducacion",
         "name": "Ministerio de Educación Nacional",
-        "url": "https://www.mineducacion.gov.co/portal/contratacion/",
+        "url": "https://www.mineducacion.gov.co/1780/w3-propertyname-2745.html",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -493,7 +475,7 @@ SOURCES = [
     {
         "id": "alcaldia_medellin",
         "name": "Alcaldía de Medellín – Contratación",
-        "url": "https://www.medellin.gov.co/es/tramites-y-servicios/contratacion/",
+        "url": "https://www.medellin.gov.co/irj/portal/medellin?NavigationTarget=navurl://6ec7d3c2dae3e88a6c3c24c9df04d73e",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -507,7 +489,7 @@ SOURCES = [
     {
         "id": "davibank_anim",
         "name": "Fiduciaria Davivienda – Patrimonios Autónomos",
-        "url": "https://www.fiduciaria.davivienda.com/procesos-licitatorios",
+        "url": "https://www.davibank.com/fiduciaria/publica/productos/patrimonios-autonomos",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -540,7 +522,7 @@ SOURCES = [
     {
         "id": "guyana_npta",
         "name": "Guyana – National Procurement & Tender Administration",
-        "url": "https://www.guyanapo.gov.gy/index.php/tenders",
+        "url": "https://guyanapo.gov.gy/tenders/",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -554,7 +536,7 @@ SOURCES = [
     {
         "id": "dominican_republic_dgcp",
         "name": "República Dominicana – DGCP",
-        "url": "https://www.dgcp.gob.do/index.php/oportunidades-de-negocios",
+        "url": "https://www.dgcp.gob.do/oportunidades-de-negocio/",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -568,7 +550,7 @@ SOURCES = [
     {
         "id": "mexico_compranet",
         "name": "México – CompraNet",
-        "url": "https://compranet.hacienda.gob.mx/web/login.html",
+        "url": "https://contratacionesabiertas.funcionpublica.gob.mx",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -605,7 +587,7 @@ SOURCES = [
     {
         "id": "sleeper_news",
         "name": "Sleeper Magazine – Hospitality Design",
-        "url": "https://sleeper.media/news",
+        "url": "https://sleeper.media/news/",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
