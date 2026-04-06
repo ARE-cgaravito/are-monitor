@@ -1,6 +1,6 @@
 """
-ARE Monitor — Fetcher Module
-Handles RSS feeds, web scraping, and public API sources.
+ARE Monitor — Fetcher Module v8
+Fixed: SECOP Integrado endpoint, SSL errors, URL corrections, JSON safety
 """
 
 import feedparser
@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from dateutil import parser as dateparser
 import pytz
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 COLOMBIA_TZ = pytz.timezone("America/Bogota")
@@ -20,13 +22,8 @@ HEADERS = {
 
 
 def fetch_source(source: dict, since_hours: int = 96) -> list:
-    """
-    Main dispatcher. Returns a list of raw opportunity dicts from a source.
-    since_hours: only return items published in the last N hours (default 96 = 4 days).
-    """
     method = source.get("fetch_method")
     since = datetime.now(tz=pytz.utc) - timedelta(hours=since_hours)
-
     try:
         if method == "rss":
             return _fetch_rss(source, since)
@@ -35,14 +32,14 @@ def fetch_source(source: dict, since_hours: int = 96) -> list:
         elif method == "api":
             return _fetch_api(source, since)
         else:
-            logger.warning(f"Unknown fetch method '{method}' for source {source['id']}")
+            logger.warning(f"Unknown fetch method '{method}' for {source['id']}")
             return []
     except Exception as e:
         logger.error(f"Failed to fetch {source['id']}: {e}")
         return []
 
 
-# ─── RSS ─────────────────────────────────────────────────────────────────────
+# ─── RSS ──────────────────────────────────────────────────────────────────────
 
 def _fetch_rss(source: dict, since: datetime) -> list:
     rss_url = source.get("rss") or source.get("url")
@@ -55,46 +52,50 @@ def _fetch_rss(source: dict, since: datetime) -> list:
             continue
         results.append({
             "id": entry.get("id") or entry.get("link"),
-            "title": entry.get("title", ""),
+            "title": _safe(entry.get("title", "")),
             "url": entry.get("link", ""),
             "source": source["name"],
             "source_id": source["id"],
             "category": source["category"],
             "subcategory": source["subcategory"],
             "published": pub.isoformat() if pub else None,
-            "summary": _clean(entry.get("summary", "")),
             "raw_text": _clean(entry.get("summary", "") + " " + entry.get("title", "")),
         })
     logger.info(f"  → {len(results)} items from {source['id']}")
     return results
 
 
-# ─── WEB SCRAPER ─────────────────────────────────────────────────────────────
+# ─── SCRAPER ──────────────────────────────────────────────────────────────────
 
 def _fetch_scrape(source: dict) -> list:
     cfg = source.get("scrape_config", {})
     url = source["url"]
+    verify_ssl = source.get("verify_ssl", True)
     logger.info(f"Scraping: {url}")
 
-    resp = requests.get(url, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "lxml")
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=20, verify=verify_ssl)
+        resp.raise_for_status()
+    except requests.exceptions.SSLError:
+        logger.warning(f"SSL error for {url}, retrying without verification")
+        resp = requests.get(url, headers=HEADERS, timeout=20, verify=False)
+        resp.raise_for_status()
 
+    soup = BeautifulSoup(resp.text, "lxml")
     listing_sel = cfg.get("listing_selector", "article")
-    title_sel = cfg.get("title_selector", "h2")
-    link_sel = cfg.get("link_selector", "a")
-    date_sel = cfg.get("date_selector", "time")
+    title_sel   = cfg.get("title_selector", "h2")
+    link_sel    = cfg.get("link_selector", "a")
+    date_sel    = cfg.get("date_selector", "time")
 
     items = soup.select(listing_sel)
     results = []
-
-    for item in items[:40]:  # cap at 40 items per scrape
+    for item in items[:40]:
         title_el = item.select_one(title_sel)
-        link_el = item.select_one(link_sel)
-        date_el = item.select_one(date_sel)
+        link_el  = item.select_one(link_sel)
+        date_el  = item.select_one(date_sel)
 
-        title = title_el.get_text(strip=True) if title_el else ""
-        href = link_el.get("href", "") if link_el else ""
+        title    = title_el.get_text(strip=True) if title_el else ""
+        href     = link_el.get("href", "") if link_el else ""
         if href and not href.startswith("http"):
             from urllib.parse import urljoin
             href = urljoin(url, href)
@@ -107,7 +108,7 @@ def _fetch_scrape(source: dict) -> list:
 
         results.append({
             "id": href,
-            "title": title,
+            "title": _safe(title),
             "url": href,
             "source": source["name"],
             "source_id": source["id"],
@@ -121,46 +122,42 @@ def _fetch_scrape(source: dict) -> list:
     return results
 
 
-# ─── API FETCHERS ─────────────────────────────────────────────────────────────
+# ─── API DISPATCHER ───────────────────────────────────────────────────────────
 
 def _fetch_api(source: dict, since: datetime) -> list:
     api_type = source["api_config"]["type"]
-    if api_type == "ted":
-        return _fetch_ted(source, since)
-    elif api_type == "secop1":
-        return _fetch_secop1(source, since)
-    elif api_type == "secop2":
-        return _fetch_secop2(source, since)
-    elif api_type == "contracts_finder":
-        return _fetch_contracts_finder(source, since)
-    elif api_type == "sam":
-        return _fetch_sam(source, since)
-    elif api_type == "chilecompra":
-        return _fetch_chilecompra(source, since)
-    else:
-        logger.warning(f"No handler for API type '{api_type}'")
-        return []
+    dispatch = {
+        "ted":              _fetch_ted,
+        "secop_integrado":  _fetch_secop_integrado,
+        "contracts_finder": _fetch_contracts_finder,
+        "chilecompra":      _fetch_chilecompra,
+    }
+    fn = dispatch.get(api_type)
+    if fn:
+        return fn(source, since)
+    logger.warning(f"No handler for API type '{api_type}'")
+    return []
 
+
+# ─── TED (EU) ─────────────────────────────────────────────────────────────────
 
 def _fetch_ted(source: dict, since: datetime) -> list:
-    """TED (EU) – uses their open search API"""
     cfg = source["api_config"]
     cpv_codes = cfg.get("cpv_codes", [])
     results = []
-
     for cpv in cpv_codes:
         try:
-            # TED public search API
             url = "https://ted.europa.eu/api/v3.0/notices/search"
-            params = {
-                "q": f"cpv:{cpv}",
-                "fields": "title,noticeNumber,publicationDate,deadlineDate,buyerName,estimatedValue,currency,cpvCodes,procedureType",
-                "page": 1,
-                "pageSize": 25,
-                "sortField": "publicationDate",
-                "sortOrder": "desc",
+            payload = {
+                "query": f"cpv:{cpv}",
+                "fields": ["title", "noticeNumber", "publicationDate",
+                           "deadlineDate", "buyerName", "estimatedValue",
+                           "currency", "procedureType"],
+                "page": 1, "pageSize": 20,
+                "sortField": "publicationDate", "sortOrder": "desc",
+                "scope": "ACTIVE",
             }
-            resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
+            resp = requests.post(url, json=payload, headers=HEADERS, timeout=20)
             if resp.status_code != 200:
                 logger.warning(f"TED API returned {resp.status_code} for CPV {cpv}")
                 continue
@@ -169,248 +166,163 @@ def _fetch_ted(source: dict, since: datetime) -> list:
                 pub = _parse_date(notice.get("publicationDate"))
                 if pub and pub < since:
                     continue
+                title = notice.get("title", "")
+                if isinstance(title, dict):
+                    title = title.get("text", "") or next(iter(title.values()), "")
                 results.append({
                     "id": notice.get("noticeNumber", ""),
-                    "title": notice.get("title", {}).get("text", ""),
-                    "url": f"https://ted.europa.eu/udl?uri=TED:NOTICE:{notice.get('noticeNumber', '')}:TEXT:EN:HTML",
+                    "title": _safe(str(title)),
+                    "url": f"https://ted.europa.eu/en/notice/{notice.get('noticeNumber', '')}",
                     "source": source["name"],
                     "source_id": source["id"],
                     "category": source["category"],
                     "subcategory": source["subcategory"],
                     "published": pub.isoformat() if pub else None,
                     "deadline": notice.get("deadlineDate"),
-                    "budget": f"{notice.get('estimatedValue')} {notice.get('currency', '')}".strip(),
-                    "organizer": notice.get("buyerName", ""),
-                    "cpv_codes": ", ".join(notice.get("cpvCodes", [])),
-                    "raw_text": notice.get("title", {}).get("text", ""),
+                    "budget": f"{notice.get('estimatedValue', '')} {notice.get('currency', '')}".strip(),
+                    "organizer": _safe(str(notice.get("buyerName", ""))),
+                    "raw_text": _safe(str(title)),
                 })
         except Exception as e:
             logger.error(f"TED fetch error for CPV {cpv}: {e}")
-
     logger.info(f"  → {len(results)} items from TED")
     return results
 
 
-def _fetch_secop1(source: dict, since: datetime) -> list:
-    """SECOP I via datos.gov.co open data API (Socrata)"""
-    cfg = source["api_config"]
+# ─── SECOP INTEGRADO ──────────────────────────────────────────────────────────
+
+def _fetch_secop_integrado(source: dict, since: datetime) -> list:
+    """
+    Uses the SECOP Integrado dataset which combines SECOP I + II.
+    Dataset ID: rpmr-utcd on datos.gov.co
+    Uses simple $q full-text search (no special characters in $where).
+    """
+    cfg      = source["api_config"]
     endpoint = cfg["endpoint"]
     keywords = cfg.get("keywords", [])
-    results = []
-
-    since_str = since.strftime("%Y-%m-%dT%H:%M:%S")
+    results  = []
 
     for keyword in keywords:
         try:
             params = {
-                "$where": f"descripcion_del_proceso like '%{keyword}%' AND fecha_de_publicacion_del_proceso >= '{since_str}'",
-                "$order": "fecha_de_publicacion_del_proceso DESC",
+                "$q": keyword,
                 "$limit": 50,
+                "$order": ":id",
             }
-            resp = requests.get(endpoint, params=params, headers=HEADERS, timeout=30)
+            resp = requests.get(
+                endpoint, params=params,
+                headers=HEADERS, timeout=30
+            )
             if resp.status_code != 200:
-                logger.warning(f"SECOP I API returned {resp.status_code}")
+                logger.warning(
+                    f"SECOP Integrado returned {resp.status_code} "
+                    f"for '{keyword}': {resp.text[:150]}"
+                )
                 continue
+
             data = resp.json()
             for item in data:
-                process_id = item.get("id_del_proceso") or item.get("numero_de_proceso", "")
-                title = item.get("descripcion_del_proceso", item.get("objeto_del_proceso", ""))
+                # Field names vary — try multiple
+                process_id = (item.get("id_proceso")
+                              or item.get("proceso_de_compra")
+                              or item.get("referencia_proceso", ""))
+                title = (item.get("descripcion_del_proceso")
+                         or item.get("objeto_del_proceso")
+                         or item.get("nombre_del_proceso", ""))
                 if not title:
                     continue
+
+                uid = f"secop_{process_id or title[:40]}"
                 results.append({
-                    "id": f"secop1_{process_id}",
-                    "title": title,
-                    "url": item.get("url_proceso", f"https://www.contratos.gov.co/consultas/inicioConsulta.do"),
+                    "id": uid,
+                    "title": _safe(title),
+                    "url": (item.get("url_proceso")
+                            or "https://www.contratos.gov.co"),
                     "source": source["name"],
                     "source_id": source["id"],
                     "category": source["category"],
                     "subcategory": source["subcategory"],
                     "published": item.get("fecha_de_publicacion_del_proceso"),
                     "deadline": item.get("fecha_limite_de_recepcion_de_propuestas"),
-                    "budget": item.get("cuantia_proceso") or item.get("valor_del_contrato"),
-                    "organizer": item.get("nombre_entidad", ""),
+                    "budget": _safe(str(
+                        item.get("cuantia_proceso")
+                        or item.get("valor_del_contrato", "")
+                    )),
+                    "organizer": _safe(item.get("nombre_entidad", "")),
                     "city": item.get("municipio", ""),
                     "department": item.get("departamento", ""),
                     "modality": item.get("modalidad_de_contratacion", ""),
-                    "raw_text": f"{title} {item.get('objeto_del_proceso', '')} {item.get('nombre_entidad', '')}",
+                    "raw_text": _safe(
+                        f"{title} {item.get('nombre_entidad', '')} "
+                        f"{item.get('municipio', '')}"
+                    ),
                 })
         except Exception as e:
-            logger.error(f"SECOP I fetch error for keyword '{keyword}': {e}")
+            logger.error(f"SECOP Integrado error for '{keyword}': {e}")
 
-    # Deduplicate by id
-    seen = set()
-    unique = []
+    # Deduplicate
+    seen, unique = set(), []
     for r in results:
         if r["id"] not in seen:
             seen.add(r["id"])
             unique.append(r)
 
-    logger.info(f"  → {len(unique)} items from SECOP I")
+    logger.info(f"  → {len(unique)} items from SECOP Integrado")
     return unique
 
 
-def _fetch_secop2(source: dict, since: datetime) -> list:
-    """SECOP II via datos.gov.co open data API"""
-    cfg = source["api_config"]
-    endpoint = cfg["endpoint"]
-    keywords = cfg.get("keywords", [])
-    results = []
-
-    since_str = since.strftime("%Y-%m-%dT%H:%M:%S")
-
-    for keyword in keywords:
-        try:
-            params = {
-                "$where": f"descripcion_del_proceso like '%{keyword}%' AND fecha_de_publicacion_del_proceso >= '{since_str}'",
-                "$order": "fecha_de_publicacion_del_proceso DESC",
-                "$limit": 50,
-            }
-            resp = requests.get(endpoint, params=params, headers=HEADERS, timeout=30)
-            if resp.status_code != 200:
-                logger.warning(f"SECOP II API returned {resp.status_code}")
-                continue
-            data = resp.json()
-            for item in data:
-                process_id = item.get("id_del_proceso") or item.get("referencia", "")
-                title = item.get("descripcion_del_proceso", item.get("nombre_del_procedimiento", ""))
-                if not title:
-                    continue
-                results.append({
-                    "id": f"secop2_{process_id}",
-                    "title": title,
-                    "url": f"https://www.colombiacompra.gov.co/secop-ii",
-                    "source": source["name"],
-                    "source_id": source["id"],
-                    "category": source["category"],
-                    "subcategory": source["subcategory"],
-                    "published": item.get("fecha_de_publicacion_del_proceso"),
-                    "deadline": item.get("fecha_limite_de_recepcion_de_propuestas"),
-                    "budget": item.get("presupuesto_oficial") or item.get("cuantia_proceso"),
-                    "organizer": item.get("nombre_entidad", ""),
-                    "city": item.get("ciudad", ""),
-                    "department": item.get("departamento", ""),
-                    "modality": item.get("modalidad_de_contratacion", ""),
-                    "raw_text": f"{title} {item.get('nombre_entidad', '')}",
-                })
-        except Exception as e:
-            logger.error(f"SECOP II fetch error for keyword '{keyword}': {e}")
-
-    seen = set()
-    unique = []
-    for r in results:
-        if r["id"] not in seen:
-            seen.add(r["id"])
-            unique.append(r)
-
-    logger.info(f"  → {len(unique)} items from SECOP II")
-    return unique
-
+# ─── CONTRACTS FINDER (UK) ────────────────────────────────────────────────────
 
 def _fetch_contracts_finder(source: dict, since: datetime) -> list:
-    """UK Contracts Finder API"""
     cfg = source["api_config"]
-    keywords = cfg.get("keywords", [])
     results = []
-    since_str = since.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    for keyword in keywords:
+    for keyword in cfg.get("keywords", []):
         try:
-            url = "https://www.contractsfinder.service.gov.uk/Published/Notices/PublishedNoticesSearchV2"
-            params = {
-                "publishedFrom": since_str,
-                "keyword": keyword,
-                "size": 25,
-            }
-            resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
+            url    = "https://www.contractsfinder.service.gov.uk/Published/Notices/PublishedNoticesSearchV2"
+            params = {"keyword": keyword, "size": 25}
+            resp   = requests.get(url, params=params, headers=HEADERS, timeout=20)
             if resp.status_code != 200:
                 continue
             data = resp.json()
-            for notice in data.get("results", data.get("notices", [])):
+            for notice in data.get("results", []):
                 results.append({
-                    "id": notice.get("id", notice.get("noticeIdentifier", "")),
-                    "title": notice.get("title", ""),
-                    "url": notice.get("links", {}).get("notices", [{}])[0].get("url", "https://www.contractsfinder.service.gov.uk"),
+                    "id": notice.get("id", ""),
+                    "title": _safe(notice.get("title", "")),
+                    "url": notice.get("link", "https://www.contractsfinder.service.gov.uk"),
                     "source": source["name"],
                     "source_id": source["id"],
                     "category": source["category"],
                     "subcategory": source["subcategory"],
                     "published": notice.get("publishedAt"),
-                    "deadline": notice.get("tenderingProcess", {}).get("tenderPeriod", {}).get("endDate"),
-                    "budget": str(notice.get("tender", {}).get("value", {}).get("amount", "")),
-                    "organizer": notice.get("buyer", {}).get("name", ""),
-                    "raw_text": f"{notice.get('title', '')} {notice.get('description', '')}",
+                    "deadline": notice.get("deadlineUtc"),
+                    "budget": _safe(str(notice.get("value", ""))),
+                    "organizer": _safe(notice.get("organisationName", "")),
+                    "raw_text": _safe(
+                        f"{notice.get('title', '')} {notice.get('description', '')}"
+                    ),
                 })
         except Exception as e:
             logger.error(f"Contracts Finder error for '{keyword}': {e}")
-
     logger.info(f"  → {len(results)} items from Contracts Finder")
     return results
 
 
-def _fetch_sam(source: dict, since: datetime) -> list:
-    """SAM.gov – US federal procurement (public API)"""
-    cfg = source["api_config"]
-    keywords = cfg.get("keywords", [])
-    results = []
-    since_str = since.strftime("%m/%d/%Y")
-
-    for keyword in keywords:
-        try:
-            url = "https://api.sam.gov/opportunities/v2/search"
-            params = {
-                "q": keyword,
-                "postedFrom": since_str,
-                "limit": 25,
-                "offset": 0,
-            }
-            resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
-            if resp.status_code != 200:
-                logger.warning(f"SAM.gov returned {resp.status_code}")
-                continue
-            data = resp.json()
-            for opp in data.get("opportunitiesData", []):
-                results.append({
-                    "id": opp.get("noticeId", ""),
-                    "title": opp.get("title", ""),
-                    "url": f"https://sam.gov/opp/{opp.get('noticeId', '')}/view",
-                    "source": source["name"],
-                    "source_id": source["id"],
-                    "category": source["category"],
-                    "subcategory": source["subcategory"],
-                    "published": opp.get("postedDate"),
-                    "deadline": opp.get("responseDeadLine"),
-                    "budget": None,
-                    "organizer": opp.get("fullParentPathName", ""),
-                    "raw_text": f"{opp.get('title', '')} {opp.get('description', '')}",
-                })
-        except Exception as e:
-            logger.error(f"SAM.gov error for '{keyword}': {e}")
-
-    logger.info(f"  → {len(results)} items from SAM.gov")
-    return results
-
+# ─── CHILECOMPRA ──────────────────────────────────────────────────────────────
 
 def _fetch_chilecompra(source: dict, since: datetime) -> list:
-    """ChileCompra – public API (no auth required for basic search)"""
     cfg = source["api_config"]
-    keywords = cfg.get("keywords", [])
     results = []
-
-    for keyword in keywords:
+    for keyword in cfg.get("keywords", []):
         try:
-            url = "https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json"
-            params = {
-                "busqueda": keyword,
-                "estado": "publicada",
-            }
-            resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
+            url    = "https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json"
+            params = {"busqueda": keyword, "estado": "publicada"}
+            resp   = requests.get(url, params=params, headers=HEADERS, timeout=15)
             if resp.status_code != 200:
                 continue
-            data = resp.json()
-            for item in data.get("Listado", []):
+            for item in resp.json().get("Listado", []):
                 results.append({
                     "id": item.get("CodigoExterno", ""),
-                    "title": item.get("Nombre", ""),
+                    "title": _safe(item.get("Nombre", "")),
                     "url": f"https://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?qs={item.get('CodigoExterno', '')}",
                     "source": source["name"],
                     "source_id": source["id"],
@@ -418,13 +330,12 @@ def _fetch_chilecompra(source: dict, since: datetime) -> list:
                     "subcategory": source["subcategory"],
                     "published": item.get("FechaPublicacion"),
                     "deadline": item.get("FechaCierre"),
-                    "budget": str(item.get("MontoEstimado", "")),
-                    "organizer": item.get("Nombre", ""),
-                    "raw_text": f"{item.get('Nombre', '')} {item.get('Descripcion', '')}",
+                    "budget": _safe(str(item.get("MontoEstimado", ""))),
+                    "organizer": _safe(item.get("Nombre", "")),
+                    "raw_text": _safe(f"{item.get('Nombre', '')} {item.get('Descripcion', '')}"),
                 })
         except Exception as e:
             logger.error(f"ChileCompra error for '{keyword}': {e}")
-
     logger.info(f"  → {len(results)} items from ChileCompra")
     return results
 
@@ -444,8 +355,17 @@ def _parse_date(date_str) -> datetime | None:
 
 
 def _clean(text: str) -> str:
-    """Basic text cleanup."""
     import re
-    text = re.sub(r"<[^>]+>", " ", text)   # strip HTML tags
-    text = re.sub(r"\s+", " ", text)         # collapse whitespace
-    return text.strip()[:2000]               # cap at 2000 chars
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return _safe(text.strip()[:2000])
+
+
+def _safe(text: str) -> str:
+    """Remove control characters that break JSON serialisation."""
+    import re
+    if not text:
+        return ""
+    # Strip control chars (except normal whitespace)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text))
+    return text.strip()
