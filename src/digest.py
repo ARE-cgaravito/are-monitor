@@ -155,6 +155,18 @@ def build_digest(results: dict) -> str:
     .error-log li{{margin-bottom:4px}}
     .footer{{text-align:center;font-size:11px;color:#bbb;padding:20px;border-top:1px solid #e8e8e4}}
     .footer a{{color:#bbb}}
+    .deadline-pill{{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}}
+    .deadline-pill.urgent{{background:#fce8e8;color:#A32D2D}}
+    .deadline-pill.soon{{background:#fff3dc;color:#854F0B}}
+    .deadline-pill.ok{{background:#e6f5ee;color:#0F6E56}}
+    .deadline-pill.unknown{{background:#f0efeb;color:#888780}}
+    .secop-block{{background:#f8f7f3;border-radius:6px;padding:8px 12px;margin-top:8px}}
+    .secop-details{{font-size:11px;color:#666;margin-bottom:5px;line-height:1.6}}
+    .det-label{{font-weight:600;color:#444}}
+    .secop-links{{display:flex;align-items:center;gap:6px;flex-wrap:wrap}}
+    .secop-search-label{{font-size:11px;color:#aaa}}
+    .secop-link{{font-size:11px;font-weight:500;color:#185FA5;text-decoration:none;background:#e8f0fb;padding:2px 8px;border-radius:4px}}
+    .secop-link:hover{{background:#ccd9f5}}
     @media(max-width:600px){{.header{{padding:24px 20px 20px}}.body{{padding:24px 16px 48px}}.header h1{{font-size:20px}}}}
   </style>
 </head>
@@ -182,9 +194,12 @@ def build_digest(results: dict) -> str:
 
 
 def _card(item: dict, accent: str, borderline: bool = False) -> str:
+    from urllib.parse import quote
+
     title     = item.get("title", "Untitled")
     url       = item.get("source_url") or item.get("url", "#")
     source    = item.get("source", "")
+    source_id = item.get("source_id", "")
     country   = item.get("country", "")
     organizer = item.get("organizer", "")
     scope     = item.get("scope_summary", "")
@@ -194,6 +209,10 @@ def _card(item: dict, accent: str, borderline: bool = False) -> str:
     budget    = item.get("budget", "")
     fit       = item.get("strategic_fit", 0)
     flags     = item.get("flags", [])
+    process_id = item.get("id", "").replace("secop_", "")
+    city       = item.get("city", "")
+    department = item.get("department", "")
+    modality   = item.get("modality", "")
 
     fit_html = ""
     if not borderline and fit:
@@ -207,36 +226,82 @@ def _card(item: dict, accent: str, borderline: bool = False) -> str:
     if country:
         meta_parts.append(country)
     if organizer:
-        meta_parts.append(organizer[:60])
+        meta_parts.append(f"<strong>{organizer[:80]}</strong>")
     meta = " · ".join(meta_parts)
 
     if deadline:
+        dl_short = deadline[:10]
         if days is not None and days < 10:
-            dcls, dlabel = "urgent", f"Deadline {deadline[:10]} ({days}d remaining)"
+            dcls   = "urgent"
+            dlabel = f"⚑ {dl_short} — {days}d"
         elif days is not None and days < 21:
-            dcls, dlabel = "soon",   f"Deadline {deadline[:10]} ({days}d remaining)"
+            dcls   = "soon"
+            dlabel = f"⚑ {dl_short} — {days}d"
+        elif days is not None:
+            dcls   = "ok"
+            dlabel = f"⚑ {dl_short} — {days}d"
         else:
-            dcls, dlabel = "ok",     f"Deadline {deadline[:10]}"
+            dcls   = "ok"
+            dlabel = f"⚑ {dl_short}"
     else:
-        dcls, dlabel = "unknown", "Deadline not stated"
+        dcls   = "unknown"
+        dlabel = "Fecha límite no indicada"
 
+    deadline_pill = f'<span class="deadline-pill {dcls}">{dlabel}</span>'
     budget_html = f'<span class="budget">{budget}</span>' if budget else ""
     flags_html = ""
     if flags:
         flag_items = "".join(f'<span class="flag">{f}</span>' for f in flags)
         flags_html = f'<div class="flags">{flag_items}</div>'
 
+    # ── Universal detail block ────────────────────────────────────────────
+    detail_parts = []
+    if process_id and len(process_id) < 80 and not process_id.startswith("http"):
+        detail_parts.append(f'<span class="det-label">Ref:</span> {process_id}')
+    if modality:
+        detail_parts.append(f'<span class="det-label">Modalidad:</span> {modality}')
+    if department:
+        loc = f"{city}, {department}" if city else department
+        detail_parts.append(f'<span class="det-label">Ubicación:</span> {loc}')
+    elif city:
+        detail_parts.append(f'<span class="det-label">Ciudad:</span> {city}')
+
+    # ── SECOP search links (only for SECOP sources) ──────────────────────
+    search_term = quote(title[:100])
+    secop_links_html = ""
+    if "secop" in source_id.lower():
+        secop1_link = f"https://www.contratos.gov.co/consultas/inicioConsulta.do?busqueda={search_term}"
+        secop2_link = f"https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?q={search_term}"
+        secop_links_html = f"""<div class="secop-links">
+          <span class="det-label">Buscar en:</span>
+          <a href="{secop1_link}" target="_blank" rel="noopener" class="secop-link">SECOP I</a>
+          <a href="{secop2_link}" target="_blank" rel="noopener" class="secop-link">SECOP II</a>
+          <a href="https://www.contratos.gov.co/consultas/inicioConsulta.do" target="_blank" rel="noopener" class="secop-link">Búsqueda manual</a>
+        </div>"""
+
+    detail_row = " &nbsp;·&nbsp; ".join(detail_parts)
+    secop_html = ""
+    if detail_row or secop_links_html:
+        secop_html = f"""
+      <div class="secop-block">
+        {f'<div class="secop-details">{detail_row}</div>' if detail_row else ""}
+        {secop_links_html}
+      </div>"""
+
     return f"""
     <div class="card">
       <div class="card-top">
         <a class="card-title" href="{url}" target="_blank" rel="noopener">{title}</a>
-        {fit_html}
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          {deadline_pill}
+          {fit_html}
+        </div>
       </div>
       <div class="card-meta">{meta}</div>
       {f'<p class="card-scope">{scope}</p>' if scope else ""}
       {f'<p class="card-why">{why}</p>'     if why   else ""}
+      {secop_html}
       <div class="card-bottom">
-        <span class="deadline {dcls}">{dlabel}</span>
         {budget_html}
       </div>
       {flags_html}
