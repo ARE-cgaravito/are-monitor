@@ -75,7 +75,7 @@ SOURCES = [
     {
         "id": "europaconcorsi",
         "name": "Europaconcorsi",
-        "url": "https://europaconcorsi.com/en/competitions",
+        "url": "https://europaconcorsi.com/en/call-for-entries",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -103,7 +103,7 @@ SOURCES = [
     {
         "id": "riba_competitions",
         "name": "RIBA Competitions",
-        "url": "https://www.architecture.com/riba-competitions/find-a-competition",
+        "url": "https://www.architecture.com/knowledge-and-resources/find-a-competition",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -122,13 +122,15 @@ SOURCES = [
     {
         "id": "ted",
         "name": "TED – Tenders Electronic Daily (EU)",
-        "url": "https://ted.europa.eu/api/v3.0/notices/search",
+        "url": "https://ted.europa.eu/en/search/result?scope=1&query=71220000+OR+71240000+OR+71400000&onlyLatest=true",
         "category": "tender",
         "subcategory": "international",
-        "fetch_method": "api",
-        "api_config": {
-            "type": "ted",
-            "cpv_codes": ["71220000", "71221000", "71240000", "71400000", "71410000"],
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .notice-item, li.result, tr",
+            "title_selector": "h2, h3, .notice-title, td.title, a",
+            "link_selector": "a",
+            "date_selector": ".date, .publication-date, td, time",
         },
     },
     {
@@ -419,7 +421,7 @@ SOURCES = [
         "id": "eru_bogota",
         "verify_ssl": False,
         "name": "ERU – Empresa de Renovación Urbana de Bogotá",
-        "url": "https://eru.gov.co/es/contratacion",
+        "url": "https://eru.gov.co/contratacion",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -433,7 +435,7 @@ SOURCES = [
     {
         "id": "idu_bogota",
         "name": "IDU – Instituto de Desarrollo Urbano",
-        "url": "https://www.idu.gov.co/contratacion",
+        "url": "https://www.idu.gov.co/es/contratacion-idu",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -447,7 +449,7 @@ SOURCES = [
     {
         "id": "mineducacion",
         "name": "Ministerio de Educación Nacional",
-        "url": "https://www.mineducacion.gov.co/1780/w3-propertyname-2745.html",
+        "url": "https://www.mineducacion.gov.co/portal/micrositios/contratacion/",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -461,7 +463,7 @@ SOURCES = [
     {
         "id": "metrovivienda",
         "name": "Metrovivienda – Bogotá",
-        "url": "https://www.metrovivienda.gov.co/contratacion",
+        "url": "https://metrovivienda.gov.co/contratacion/",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -522,7 +524,7 @@ SOURCES = [
     {
         "id": "guyana_npta",
         "name": "Guyana – National Procurement & Tender Administration",
-        "url": "https://guyanapo.gov.gy/tenders/",
+        "url": "http://guyanapo.gov.gy/tenders/",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -550,7 +552,7 @@ SOURCES = [
     {
         "id": "mexico_compranet",
         "name": "México – CompraNet",
-        "url": "https://contratacionesabiertas.funcionpublica.gob.mx",
+        "url": "https://www.infomex.org.mx/gobiernofederal/moduloPublico/moduloPublico.action",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -570,7 +572,7 @@ SOURCES = [
         "id": "hospitalitynet",
         "name": "Hospitalitynet – Hotel Development News",
         "url": "https://www.hospitalitynet.org/news/hotel_development.html",
-        "rss": "https://www.hospitalitynet.org/rss/4news.html",
+        "rss": "https://www.hospitalitynet.org/rss/4opinion.html",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "rss",
@@ -587,7 +589,7 @@ SOURCES = [
     {
         "id": "sleeper_news",
         "name": "Sleeper Magazine – Hospitality Design",
-        "url": "https://sleeper.media/news/",
+        "url": "https://sleeper.media/category/news/",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
