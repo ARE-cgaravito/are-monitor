@@ -1,5 +1,167 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>ARE Monitor — Setting up...</title>
-<style>body{font-family:-apple-system,sans-serif;background:#1a1a18;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-.box{text-align:center;padding:40px}.sub{color:#555;margin-top:8px;font-size:14px}</style>
-</head><body><div class="box"><h1>ARE Monitor</h1><p class="sub">Digest will appear here after the first run.</p></div></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARE Opportunity Digest</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f3ef;color:#1a1a18;min-height:100vh}
+    .header{background:#1a1a18;padding:32px 40px 28px}
+    .header-meta{font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+    .header h1{font-size:24px;font-weight:500;color:#fff;letter-spacing:-.02em;margin-bottom:20px}
+    .stats{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{background:#2a2a28;border-radius:8px;padding:10px 18px;min-width:90px}
+    .stat-number{font-size:26px;font-weight:500;color:#fff;line-height:1}
+    .stat-number.amber{color:#BA7517}
+    .stat-number.muted{color:#555}
+    .stat-label{font-size:11px;color:#666;margin-top:4px}
+    .run-date{font-size:11px;color:#444;margin-top:16px}
+    .body{max-width:800px;margin:0 auto;padding:32px 24px 64px}
+    section{margin-bottom:40px}
+    .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .section-bar{width:4px;height:20px;border-radius:2px;flex-shrink:0}
+    .section-label{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+    .section-count{font-size:12px;font-weight:600;background:#ebebeb;border-radius:20px;padding:1px 8px}
+    .borderline-note{font-size:12px;color:#888;margin:-4px 0 12px 14px}
+    .cards{display:flex;flex-direction:column;gap:8px}
+    .card{background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:16px 20px;transition:box-shadow .15s}
+    .card:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+    .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .card-title{font-size:15px;font-weight:500;color:#1a1a18;text-decoration:none;line-height:1.4;flex:1}
+    .card-title:hover{color:#185FA5}
+    .fit-stars{font-size:13px;flex-shrink:0;margin-top:1px}
+    .card-meta{font-size:12px;color:#888;margin-top:5px}
+    .card-meta a{color:inherit;font-weight:500;text-decoration:none}
+    .card-meta a:hover{text-decoration:underline}
+    .card-scope{font-size:13px;color:#444;margin-top:8px;line-height:1.55}
+    .card-why{font-size:12px;color:#999;font-style:italic;margin-top:4px}
+    .card-bottom{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+    .deadline{font-size:12px;font-weight:500}
+    .deadline.urgent{color:#E24B4A}
+    .deadline.soon{color:#BA7517}
+    .deadline.ok{color:#1D9E75}
+    .deadline.unknown{color:#aaa}
+    .budget{font-size:12px;color:#666}
+    .flags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+    .flag{font-size:11px;background:#fff8e6;color:#854F0B;padding:2px 8px;border-radius:4px}
+    .empty{text-align:center;padding:80px 20px;color:#888}
+    .empty-icon{font-size:40px;margin-bottom:16px;opacity:.3}
+    .empty-sub{font-size:13px;margin-top:6px}
+    .error-log{margin-top:40px;font-size:12px;color:#aaa;border-top:1px solid #e8e8e4;padding-top:16px}
+    .error-log summary{cursor:pointer}
+    .error-log ul{margin-top:8px;padding-left:20px}
+    .error-log li{margin-bottom:4px}
+    .footer{text-align:center;font-size:11px;color:#bbb;padding:20px;border-top:1px solid #e8e8e4}
+    .footer a{color:#bbb}
+    @media(max-width:600px){.header{padding:24px 20px 20px}.body{padding:24px 16px 48px}.header h1{font-size:20px}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-meta">Business Intelligence · ARE</div>
+    <h1>Opportunity Digest</h1>
+    <div class="stats">
+      <div class="stat"><div class="stat-number">1</div><div class="stat-label">Qualified</div></div>
+      <div class="stat"><div class="stat-number amber">4</div><div class="stat-label">Borderline</div></div>
+      <div class="stat"><div class="stat-number muted">12</div><div class="stat-label">Scanned</div></div>
+    </div>
+    <div class="run-date">Last updated: Monday 06 April 2026 — 04:15 PM COT</div>
+  </div>
+  <div class="body">
+    
+        <section>
+          <div class="section-header">
+            <div class="section-bar" style="background:#1D9E75"></div>
+            <span class="section-label" style="color:#1D9E75">Architecture & Design Competitions — International</span>
+            <span class="section-count" style="color:#1D9E75">1</span>
+          </div>
+          <div class="cards">
+    <div class="card">
+      <div class="card-top">
+        <a class="card-title" href="https://competitions.archi/competition/open-architectural-competition-for-maksimir-stadium-and-svetice-sports-and-recreation-centre/" target="_blank" rel="noopener">Open Architectural Competition for Maksimir Stadium and Svetice Sports and Recreation Centre</a>
+        <span class="fit-stars" style="color:#1D9E75" title="Strategic fit 4/5">★★★★☆</span>
+      </div>
+      <div class="card-meta"><a href="https://competitions.archi/competition/open-architectural-competition-for-maksimir-stadium-and-svetice-sports-and-recreation-centre/" style="color:#1D9E75">Competitions.Archi</a> · Croatia · City of Zagreb/Croatian Government</div>
+      <p class="card-scope">Design competition for 35,000-seat stadium and sports complex with clear government backing and substantial budget.</p>
+      <p class="card-why">Major architectural competition with clear commission path and government backing</p>
+      <div class="card-bottom">
+        <span class="deadline ok">Deadline 2026-06-24</span>
+        <span class="budget">€224 million</span>
+      </div>
+      
+    </div></div>
+        </section>
+        <section>
+          <div class="section-header">
+            <div class="section-bar" style="background:#BA7517"></div>
+            <span class="section-label" style="color:#BA7517">Borderline — your call</span>
+            <span class="section-count" style="color:#BA7517">4</span>
+          </div>
+          <p class="borderline-note">These passed the core filter but have complicating factors. Review individually.</p>
+          <div class="cards">
+    <div class="card">
+      <div class="card-top">
+        <a class="card-title" href="https://competitions.archi/competition/citadel-of-wisdom/" target="_blank" rel="noopener">Citadel of Wisdom</a>
+        
+      </div>
+      <div class="card-meta"><a href="https://competitions.archi/competition/citadel-of-wisdom/" style="color:#BA7517">Competitions.Archi</a> · Italy · Unknown</div>
+      <p class="card-scope">Design for elderly care facility in Tuscan Maremma - commission path unclear.</p>
+      <p class="card-why">Architectural design competition for institutional project but unclear if winner gets commissioned</p>
+      <div class="card-bottom">
+        <span class="deadline ok">Deadline 2026-06-10</span>
+        <span class="budget">€15,000</span>
+      </div>
+      <div class="flags"><span class="flag">⚠ no_budget</span></div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <a class="card-title" href="https://competitions.archi/competition/nidos-de-agua-competition/" target="_blank" rel="noopener">NIDOS DE AGUA Competition</a>
+        
+      </div>
+      <div class="card-meta"><a href="https://competitions.archi/competition/nidos-de-agua-competition/" style="color:#BA7517">Competitions.Archi</a> · Spain · Terraviva</div>
+      <p class="card-scope">Design competition for microarchitecture pavilion in Valencia wetland park - commission path unclear.</p>
+      <p class="card-why">Architectural design competition for specific site but unclear commission path</p>
+      <div class="card-bottom">
+        <span class="deadline ok">Deadline 2026-09-11</span>
+        <span class="budget">€8,000</span>
+      </div>
+      <div class="flags"><span class="flag">⚠ no_budget</span></div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <a class="card-title" href="https://competitions.archi/competition/villa-gioia-competition/" target="_blank" rel="noopener">VILLA GIOIA Competition</a>
+        
+      </div>
+      <div class="card-meta"><a href="https://competitions.archi/competition/villa-gioia-competition/" style="color:#BA7517">Competitions.Archi</a> · Italy · Terraviva</div>
+      <p class="card-scope">Design competition to transform historic Italian estate into retirement residence - commission path unclear.</p>
+      <p class="card-why">Architectural design project for real site but unclear if winner receives commission</p>
+      <div class="card-bottom">
+        <span class="deadline ok">Deadline 2026-10-23</span>
+        <span class="budget">€10,000</span>
+      </div>
+      <div class="flags"><span class="flag">⚠ no_budget</span></div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <a class="card-title" href="https://competitions.archi/competition/e100000-prize-kingspan-microhome-2026/" target="_blank" rel="noopener">€100,000 Prize / Kingspan MICROHOME 2026</a>
+        
+      </div>
+      <div class="card-meta"><a href="https://competitions.archi/competition/e100000-prize-kingspan-microhome-2026/" style="color:#BA7517">Competitions.Archi</a> · International · Buildner/Kingspan</div>
+      <p class="card-scope">Design competition for off-grid modular dwelling with substantial prize but unclear commission path.</p>
+      <p class="card-why">Large prize suggests potential for realization but commission path not explicitly stated</p>
+      <div class="card-bottom">
+        <span class="deadline ok">Deadline 2026-11-02</span>
+        <span class="budget">€100,000</span>
+      </div>
+      <div class="flags"><span class="flag">⚠ no_budget</span></div>
+    </div></div>
+        </section>
+    
+  </div>
+  <div class="footer">
+    ARE Monitor · Powered by Claude Sonnet ·
+    <a href="https://github.com/ARE-cgaravito/are-monitor">GitHub</a>
+  </div>
+</body>
+</html>
