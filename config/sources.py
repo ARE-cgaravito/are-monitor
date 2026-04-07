@@ -11,24 +11,24 @@ SOURCES = [
         "id": "bustler",
         "name": "Bustler",
         "url": "https://bustler.net/competitions",
-        "rss": "https://bustler.net/rss/competitions",
         "category": "architecture_competition",
         "subcategory": "international",
-        "fetch_method": "rss",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .comp-item, .item, li.item",
+            "title_selector": "h2, h3, .item-title, a",
+            "link_selector": "a",
+            "date_selector": ".date, time, .item-date",
+        },
     },
     {
         "id": "archdaily_competitions",
         "name": "ArchDaily – Competitions",
         "url": "https://www.archdaily.com/search/competitions",
+        "rss": "https://www.archdaily.com/feed",
         "category": "architecture_competition",
         "subcategory": "international",
-        "fetch_method": "scrape",
-        "scrape_config": {
-            "listing_selector": "article, div.search-result, li.search-item",
-            "title_selector": "h3, h2, .afd-title",
-            "link_selector": "a",
-            "date_selector": "time, .afd-date",
-        },
+        "fetch_method": "rss",
     },
     {
         "id": "competitions_archi",
@@ -75,7 +75,7 @@ SOURCES = [
     {
         "id": "europaconcorsi",
         "name": "Europaconcorsi",
-        "url": "https://europaconcorsi.com/en/call-for-entries",
+        "url": "https://europaconcorsi.com/en/competitions/latest",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -103,7 +103,7 @@ SOURCES = [
     {
         "id": "riba_competitions",
         "name": "RIBA Competitions",
-        "url": "https://www.architecture.com/knowledge-and-resources/find-a-competition",
+        "url": "https://www.architecture.com/riba-competitions",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -278,7 +278,7 @@ SOURCES = [
     {
         "id": "coac",
         "name": "COAC – Barcelona",
-        "url": "https://www.arquitectes.cat/ca/serveis/concursos",
+        "url": "https://www.arquitectes.cat/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -306,7 +306,7 @@ SOURCES = [
     {
         "id": "coas",
         "name": "COAS – Sevilla",
-        "url": "https://coas.es/concursos/",
+        "url": "https://coas.es/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -335,7 +335,7 @@ SOURCES = [
     {
         "id": "coaa",
         "name": "COAA – Zaragoza",
-        "url": "https://www.coaaragon.es/concursos",
+        "url": "https://www.coaaragon.es/coaaragon/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -349,7 +349,7 @@ SOURCES = [
     {
         "id": "coa_malaga",
         "name": "COA Málaga",
-        "url": "https://coamalaga.es/concursos",
+        "url": "https://coamalaga.es/servicios/concursos",
         "category": "architecture_competition",
         "subcategory": "spain",
         "fetch_method": "scrape",
@@ -421,7 +421,7 @@ SOURCES = [
         "id": "eru_bogota",
         "verify_ssl": False,
         "name": "ERU – Empresa de Renovación Urbana de Bogotá",
-        "url": "https://eru.gov.co/contratacion",
+        "url": "https://www.eru.gov.co/es/procesos-de-contratacion",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -435,7 +435,7 @@ SOURCES = [
     {
         "id": "idu_bogota",
         "name": "IDU – Instituto de Desarrollo Urbano",
-        "url": "https://www.idu.gov.co/es/contratacion-idu",
+        "url": "https://www.idu.gov.co/es/transparencia/contratacion",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -449,7 +449,7 @@ SOURCES = [
     {
         "id": "mineducacion",
         "name": "Ministerio de Educación Nacional",
-        "url": "https://www.mineducacion.gov.co/portal/micrositios/contratacion/",
+        "url": "https://www.mineducacion.gov.co/1780/w3-propertyname-82745.html",
         "category": "tender",
         "subcategory": "colombia",
         "fetch_method": "scrape",
@@ -572,7 +572,7 @@ SOURCES = [
         "id": "hospitalitynet",
         "name": "Hospitalitynet – Hotel Development News",
         "url": "https://www.hospitalitynet.org/news/hotel_development.html",
-        "rss": "https://www.hospitalitynet.org/rss/4opinion.html",
+        "rss": "https://www.hospitalitynet.org/rss/4development.html",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "rss",
@@ -589,7 +589,7 @@ SOURCES = [
     {
         "id": "sleeper_news",
         "name": "Sleeper Magazine – Hospitality Design",
-        "url": "https://sleeper.media/category/news/",
+        "url": "https://sleeper.media",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -617,6 +617,57 @@ SOURCES = [
             "title_selector": "h2, h3, td, a",
             "link_selector": "a",
             "date_selector": ".fecha, td, time",
+        },
+    },
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # NEW INTERNATIONAL COMPETITION SOURCES
+    # ═══════════════════════════════════════════════════════════════════════
+
+    {
+        "id": "dezeen_competitions",
+        "name": "Dezeen Competitions",
+        "url": "https://www.dezeen.com/competitions/",
+        "rss": "https://www.dezeen.com/competitions/feed/",
+        "category": "architecture_competition",
+        "subcategory": "international",
+        "fetch_method": "rss",
+    },
+    {
+        "id": "designboom_competitions",
+        "name": "Designboom – Competitions",
+        "url": "https://www.designboom.com/competition/",
+        "rss": "https://www.designboom.com/competition/feed/",
+        "category": "architecture_competition",
+        "subcategory": "international",
+        "fetch_method": "rss",
+    },
+    {
+        "id": "architects_journal",
+        "name": "Architects Journal – Competitions",
+        "url": "https://www.architectsjournal.co.uk/competitions",
+        "category": "architecture_competition",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .competition-item, .card, li",
+            "title_selector": "h2, h3, .title, a",
+            "link_selector": "a",
+            "date_selector": "time, .date, .deadline",
+        },
+    },
+    {
+        "id": "amsterdam_competitions",
+        "name": "City of Amsterdam – Open Calls",
+        "url": "https://www.amsterdam.nl/prijsvragen/",
+        "category": "architecture_competition",
+        "subcategory": "international",
+        "fetch_method": "scrape",
+        "scrape_config": {
+            "listing_selector": "article, .item, li, .prijsvraag",
+            "title_selector": "h2, h3, .title, a",
+            "link_selector": "a",
+            "date_selector": "time, .date, .deadline",
         },
     },
 ]
