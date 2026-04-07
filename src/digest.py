@@ -285,7 +285,21 @@ def _card(item: dict, accent: str, borderline: bool = False) -> str:
         secop_html = f"""
       <div class="secop-block">
         {f'<div class="secop-details">{detail_row}</div>' if detail_row else ""}
-        {secop_links_html}
+        {secop_links_html if secop_links_html else ""}
+      </div>"""
+    elif "secop" in source_id.lower():
+        # Always show search buttons for SECOP even with no detail fields
+        search_term_fb = quote(title[:100])
+        s1 = f"https://www.contratos.gov.co/consultas/inicioConsulta.do?busqueda={search_term_fb}"
+        s2 = f"https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?q={search_term_fb}"
+        secop_html = f"""
+      <div class="secop-block">
+        <div class="secop-links">
+          <span class="det-label">Buscar en:</span>
+          <a href="{s1}" target="_blank" rel="noopener" class="secop-link">SECOP I</a>
+          <a href="{s2}" target="_blank" rel="noopener" class="secop-link">SECOP II</a>
+          <a href="https://www.contratos.gov.co/consultas/inicioConsulta.do" target="_blank" rel="noopener" class="secop-link">Búsqueda manual</a>
+        </div>
       </div>"""
 
     return f"""
