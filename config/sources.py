@@ -10,12 +10,13 @@ SOURCES = [
     {
         "id": "bustler",
         "name": "Bustler",
-        "url": "https://bustler.net/competitions",
+        "url": "https://bustler.net/competitions/type/0/page/1",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
+        "timeout": 30,
         "scrape_config": {
-            "listing_selector": "article, .comp-item, .item, li.item",
+            "listing_selector": "article, .comp-item, .item, li",
             "title_selector": "h2, h3, .item-title, a",
             "link_selector": "a",
             "date_selector": ".date, time, .item-date",
@@ -103,7 +104,7 @@ SOURCES = [
     {
         "id": "riba_competitions",
         "name": "RIBA Competitions",
-        "url": "https://www.architecture.com/riba-competitions",
+        "url": "https://www.riba.org/explore/competitions/",
         "category": "architecture_competition",
         "subcategory": "international",
         "fetch_method": "scrape",
@@ -162,13 +163,13 @@ SOURCES = [
     {
         "id": "idb_projects",
         "name": "IDB – Inter-American Development Bank",
-        "url": "https://www.iadb.org/en/about-us/procurement/procurement-notices",
+        "url": "https://www.iadb.org/en/project-search?query=architecture+design&sector=Urban+Development+and+Housing",
         "category": "tender",
         "subcategory": "international",
         "fetch_method": "scrape",
         "scrape_config": {
-            "listing_selector": "article, .project-item, tr, li",
-            "title_selector": "h2, h3, td, .title",
+            "listing_selector": "article, .project-item, .search-result, li, tr",
+            "title_selector": "h2, h3, .project-title, td, a",
             "link_selector": "a",
             "date_selector": ".date, td, time",
         },
