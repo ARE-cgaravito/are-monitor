@@ -73,12 +73,13 @@ def _fetch_scrape(source: dict) -> list:
     verify_ssl = source.get("verify_ssl", True)
     logger.info(f"Scraping: {url}")
 
+    timeout = source.get("timeout", 20)
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=20, verify=verify_ssl)
+        resp = requests.get(url, headers=HEADERS, timeout=timeout, verify=verify_ssl)
         resp.raise_for_status()
     except requests.exceptions.SSLError:
         logger.warning(f"SSL error for {url}, retrying without verification")
-        resp = requests.get(url, headers=HEADERS, timeout=20, verify=False)
+        resp = requests.get(url, headers=HEADERS, timeout=timeout, verify=False)
         resp.raise_for_status()
 
     soup = BeautifulSoup(resp.text, "lxml")
@@ -222,49 +223,61 @@ def _fetch_secop_integrado(source: dict, since: datetime) -> list:
 
             data = resp.json()
             for item in data:
-                # Official SECOP process number — try all known field names
-                process_number = (
-                    item.get("proceso_de_compra")
-                    or item.get("numero_del_proceso")
-                    or item.get("id_proceso")
-                    or item.get("referencia_proceso")
-                    or item.get("numero_proceso")
-                    or ""
+                # Real field names from SECOP Integrado CSV:
+                # ID Proceso = id_proceso, URL Contrato = url_contrato
+                # Objeto del contrato = objeto_del_contrato
+                # Objeto del proceso = objeto_del_proceso
+                id_proceso   = item.get("id_proceso", "")
+                id_contrato  = item.get("id_contrato", "")
+                url_contrato = item.get("url_contrato", "")
+
+                # Process number — ID Proceso is the human-readable reference
+                process_number = _safe(id_proceso or id_contrato or "")
+
+                # Build direct URL — url_contrato has the exact process link
+                if url_contrato and url_contrato.startswith("http"):
+                    direct_url = url_contrato
+                elif id_proceso:
+                    direct_url = f"https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia={id_proceso}"
+                else:
+                    direct_url = "https://www.contratos.gov.co"
+
+                title = _safe(
+                    item.get("objeto_del_contrato")
+                    or item.get("objeto_del_proceso")
+                    or item.get("descripcion_del_proceso")
+                    or item.get("nombre_del_proceso", "")
                 )
-                title = (item.get("descripcion_del_proceso")
-                         or item.get("objeto_del_proceso")
-                         or item.get("nombre_del_proceso", ""))
                 if not title:
                     continue
 
-                uid = f"secop_{process_number or title[:40]}"
-                if process_number:
-                    direct_url = f"https://www.contratos.gov.co/consultas/inicioConsulta.do?busqueda={process_number}"
-                else:
-                    direct_url = item.get("url_proceso") or "https://www.contratos.gov.co"
+                uid = f"secop_{id_proceso or title[:40]}"
 
                 results.append({
                     "id": uid,
-                    "title": _safe(title),
+                    "title": title,
                     "url": direct_url,
                     "source": source["name"],
                     "source_id": source["id"],
                     "category": source["category"],
                     "subcategory": source["subcategory"],
-                    "published": item.get("fecha_de_publicacion_del_proceso"),
-                    "deadline": item.get("fecha_limite_de_recepcion_de_propuestas"),
-                    "budget": _safe(str(
-                        item.get("cuantia_proceso")
-                        or item.get("valor_del_contrato", "")
-                    )),
-                    "organizer": _safe(item.get("nombre_entidad", "")),
-                    "city": item.get("municipio", ""),
-                    "department": item.get("departamento", ""),
-                    "modality": item.get("modalidad_de_contratacion", ""),
-                    "process_number": _safe(process_number),
+                    "published": item.get("fecha_de_firma_del_contrato")
+                                 or item.get("fecha_inicio_ejecucion"),
+                    "deadline": item.get("fecha_fin_ejecucion"),
+                    "budget": _safe(str(item.get("valor_contrato", ""))),
+                    "organizer": _safe(item.get("nombre_de_la_entidad", "")
+                                       or item.get("nombre_entidad", "")),
+                    "city": _safe(item.get("municipio_entidad", "")
+                                  or item.get("municipio", "")),
+                    "department": _safe(item.get("departamento_entidad", "")
+                                        or item.get("departamento", "")),
+                    "modality": _safe(item.get("modalidad_de_contratacion", "")),
+                    "process_number": process_number,
                     "raw_text": _safe(
-                        f"{title} {item.get('nombre_entidad', '')} "
-                        f"{item.get('municipio', '')} {process_number}"
+                        f"{title} "
+                        f"{item.get('nombre_de_la_entidad', '') or item.get('nombre_entidad', '')} "
+                        f"{item.get('municipio_entidad', '') or item.get('municipio', '')} "
+                        f"{id_proceso}"
                     ),
                 })
         except Exception as e:
