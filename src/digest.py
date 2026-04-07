@@ -161,6 +161,7 @@ def build_digest(results: dict) -> str:
     .deadline-pill.ok{{background:#e6f5ee;color:#0F6E56}}
     .deadline-pill.unknown{{background:#f0efeb;color:#888780}}
     .secop-block{{background:#f8f7f3;border-radius:6px;padding:8px 12px;margin-top:8px}}
+    .process-num{{font-family:monospace;font-size:12px;font-weight:700;color:#185FA5;background:#e8f0fb;padding:1px 6px;border-radius:4px;letter-spacing:0.03em}}
     .secop-details{{font-size:11px;color:#666;margin-bottom:5px;line-height:1.6}}
     .det-label{{font-weight:600;color:#444}}
     .secop-links{{display:flex;align-items:center;gap:6px;flex-wrap:wrap}}
@@ -209,7 +210,8 @@ def _card(item: dict, accent: str, borderline: bool = False) -> str:
     budget    = item.get("budget", "")
     fit       = item.get("strategic_fit", 0)
     flags     = item.get("flags", [])
-    process_id = item.get("id", "").replace("secop_", "")
+    process_id     = item.get("id", "").replace("secop_", "")
+    process_number = item.get("process_number", "")
     city       = item.get("city", "")
     department = item.get("department", "")
     modality   = item.get("modality", "")
@@ -256,7 +258,15 @@ def _card(item: dict, accent: str, borderline: bool = False) -> str:
 
     # ── Universal detail block ────────────────────────────────────────────
     detail_parts = []
-    if process_id and len(process_id) < 80 and not process_id.startswith("http"):
+    if process_number and len(process_number) < 80:
+        detail_parts.append(
+            f'<span class="det-label">No. proceso:</span> '
+            f'<span class="process-num">{process_number}</span>'
+        )
+    elif (process_id
+            and len(process_id) < 60
+            and not process_id.startswith("http")
+            and process_id.upper() != title[:len(process_id)].upper()):
         detail_parts.append(f'<span class="det-label">Ref:</span> {process_id}')
     if modality:
         detail_parts.append(f'<span class="det-label">Modalidad:</span> {modality}')
