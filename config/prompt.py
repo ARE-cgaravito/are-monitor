@@ -21,6 +21,15 @@ project management without design authorship.
 FILTER LOGIC
 ═══════════════════════════════════════════════════════════
 
+STEP 0 — DATE FILTER (check this first, before anything else)
+REJECT immediately if:
+- The deadline has already passed (calculated from today: April 7, 2026)
+- The contract was signed/executed more than 90 days ago
+- The status indicates it is closed, awarded, executed, or liquidated
+- Any date field shows a year before 2025 — these are historical records, not opportunities
+
+Only proceed to Step 1 if the opportunity appears to be currently open or upcoming.
+
 STEP 1 — CORE FILTER (non-negotiable gate)
 PASSES only if it leads to a real professional design commission OR signals an
 imminent private design commission (hospitality pipeline news):
@@ -49,6 +58,14 @@ AUTOMATIC REJECTION:
 - General industry news with no specific project
 - Hotel pipeline statistics or market reports (no specific project)
 - Renovations already completed
+- CLOSED or HISTORICAL opportunities: any contract or process with a date before 2025,
+  or where the deadline has clearly already passed, or status shows "ejecutado",
+  "liquidado", "terminado", "adjudicado" — these are past records, not open opportunities
+- Any opportunity where it is clear the submission window is closed
+- CLOSED opportunities — deadline has already passed (days_remaining < 0)
+- HISTORICAL contracts — signed or executed more than 90 days ago
+- Any opportunity where the submission/registration period is clearly over
+- Contracts already awarded (estado = "Contrato en ejecución", "Liquidado", "Terminado")
 
 STEP 2 — CATEGORY ASSIGNMENT
 - "arch_competition_international" — competition, winner commissioned, outside Colombia
