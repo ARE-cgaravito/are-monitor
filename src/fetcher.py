@@ -222,22 +222,31 @@ def _fetch_secop_integrado(source: dict, since: datetime) -> list:
 
             data = resp.json()
             for item in data:
-                # Field names vary — try multiple
-                process_id = (item.get("id_proceso")
-                              or item.get("proceso_de_compra")
-                              or item.get("referencia_proceso", ""))
+                # Official SECOP process number — try all known field names
+                process_number = (
+                    item.get("proceso_de_compra")
+                    or item.get("numero_del_proceso")
+                    or item.get("id_proceso")
+                    or item.get("referencia_proceso")
+                    or item.get("numero_proceso")
+                    or ""
+                )
                 title = (item.get("descripcion_del_proceso")
                          or item.get("objeto_del_proceso")
                          or item.get("nombre_del_proceso", ""))
                 if not title:
                     continue
 
-                uid = f"secop_{process_id or title[:40]}"
+                uid = f"secop_{process_number or title[:40]}"
+                if process_number:
+                    direct_url = f"https://www.contratos.gov.co/consultas/inicioConsulta.do?busqueda={process_number}"
+                else:
+                    direct_url = item.get("url_proceso") or "https://www.contratos.gov.co"
+
                 results.append({
                     "id": uid,
                     "title": _safe(title),
-                    "url": (item.get("url_proceso")
-                            or "https://www.contratos.gov.co"),
+                    "url": direct_url,
                     "source": source["name"],
                     "source_id": source["id"],
                     "category": source["category"],
@@ -252,9 +261,10 @@ def _fetch_secop_integrado(source: dict, since: datetime) -> list:
                     "city": item.get("municipio", ""),
                     "department": item.get("departamento", ""),
                     "modality": item.get("modalidad_de_contratacion", ""),
+                    "process_number": _safe(process_number),
                     "raw_text": _safe(
                         f"{title} {item.get('nombre_entidad', '')} "
-                        f"{item.get('municipio', '')}"
+                        f"{item.get('municipio', '')} {process_number}"
                     ),
                 })
         except Exception as e:
