@@ -56,13 +56,31 @@ def main():
 
     seen_ids = set()
     unique_raw = []
+    skipped_old = 0
     for item in all_raw:
         uid = item.get("id") or item.get("url")
-        if uid and uid not in seen_ids:
-            seen_ids.add(uid)
-            unique_raw.append(item)
+        if not uid:
+            continue
+        if uid in seen_ids:
+            continue
+        # Skip records with a published/signed date clearly before 2025
+        for date_field in ["published", "fecha_de_firma_del_contrato", "fecha_inicio_ejecucion"]:
+            date_val = str(item.get(date_field, "") or "")
+            if len(date_val) >= 4:
+                try:
+                    year = int(date_val[:4])
+                    if year < 2025:
+                        skipped_old += 1
+                        uid = None  # mark for skip
+                        break
+                except (ValueError, TypeError):
+                    pass
+        if uid is None:
+            continue
+        seen_ids.add(uid)
+        unique_raw.append(item)
 
-    logger.info(f"After deduplication: {len(unique_raw)} unique items")
+    logger.info(f"After dedup + date filter: {len(unique_raw)} items ({skipped_old} old records skipped)")
 
     results = filter_opportunities(unique_raw)
     results["errors"] = results.get("errors", []) + fetch_errors
