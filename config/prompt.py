@@ -108,6 +108,7 @@ OUTPUT FORMAT — return ONLY valid JSON, no preamble
     "days_remaining": integer or null,
     "budget": "stated budget as string, or null",
     "organizer": "entity name or hotel brand/developer",
+    "process_number": "official procurement process number (e.g. SASI-CM-001-2026) — copy exactly from proceso_de_compra or numero_del_proceso field. null if not available.",
     "country": "country",
     "scope_summary": "1-2 sentence plain description of what is being procured or built",
     "why_included": "1 sentence explaining why it passed (INCLUDE/BORDERLINE only)",
